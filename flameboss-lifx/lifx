@@ -1,0 +1,28 @@
+from lifxlan import LifxLAN, RED, GREEN, BLUE
+
+lan = LifxLAN()
+devices = lan.get_devices()
+
+count = 1
+
+for device in devices:
+    print("{}. {}".format(count, device.get_label()))
+    count += 1
+
+
+while True:
+    selection = input("Enter the number of the bulb to control: ")
+
+    try:
+        selection = int(selection)
+    except ValueError:
+        print("Try again.")
+
+    if selection > count:
+        print("Try again.")
+    else:
+        break
+
+device = devices[selection]
+
+# What info is required to target a specific bulb in future?
