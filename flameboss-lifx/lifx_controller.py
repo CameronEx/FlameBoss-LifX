@@ -1,12 +1,20 @@
 from lifxlan import LifxLan
 from pick import pick
 
+"""
+Used to interact with, LifX bulbs.
+A general class to interact with the LifxLan library, making it a little
+more user friendly.
+Although specificly created for FlameBoss-LifX, modules were constructed
+in a general nature, to allow for reuse in other projects.
+
+Repository: https://github.com/CameronEx/FlameBoss-LifX/
+Code, documentation, isses and license info here.
+TODO: Group interaction
+"""
+
 class LifxController:
-    """
-    Used to interact with, and control, LifX bulbs.
-    DONE: Bulb discovery
-    TODO: Group interaction
-    """
+
     def __init__(self):
         logging.debug("Initialising LifxController.")
         self.lan = LifxLan()
@@ -23,7 +31,7 @@ class LifxController:
         logging.DEBUG("discover_bulbs: Discovering individual bulbs.")
         # Discover bulbs on the LAN
         self.bulbs = self.lan(get_devices)
-        logging.DEBUG("discover_bulbs: Discovery complete.")
+        logging.DEBUG(f"discover_bulbs: Discovery complete. {len(self.lan)} bulbs found.")
 
         for bulb in bulbs:
             # Build a list of bulb names
@@ -48,7 +56,6 @@ class LifxController:
             logging.DEBUG("User is going to target a single bulb.")
             title = "Select the bulb to target"
             selection, _ = pick(self.bulb_list, title)
-            save_config(self.bulbs[selection].get_mac_addr(), self.bulbs[selection].get_ip_addr())
             self.bulb = self.bulbs[selection]
         else:
             logging.debug("User is going to target a group of bulbs.")
@@ -75,9 +82,15 @@ class LifxController:
         if self.group:
             return self.group.set_color(color)
 
-    @staticmethod
-    def save_config(mac_addr, ip_addr):
+    def get_config(self):
         """
-        Saves configuration for use, later.
-        TODO: this.
+        Returns bulb config, to save for later.
+        return: dict
         """
+        bulb_config: dict = {
+        "mac_addr": self.bulbs[selection].get_mac_addr(),
+        "ip_addr": self.bulbs[selection].get_ip_addr(),
+        "label": self.bulbs[selection].get_label()
+        }
+
+        return bulb_config

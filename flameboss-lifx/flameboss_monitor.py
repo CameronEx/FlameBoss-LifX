@@ -2,10 +2,13 @@ import requests
 import logging
 
 """
-Monitors a cook being performed by FlameBoss. Converts this to visual alerts on LifX bulbs.
-DONE: Collect and store data from API
-TODO: Build LIFX Control
-TODO: Logic to change LifX settings based upon data
+FlameBossMon
+A general class to interact with the FlameBoss Controller API.
+Although specificly created for FlameBoss-LifX, modules were constructed
+in a general nature, to allow for reuse in other projects.
+
+Repository: https://github.com/CameronEx/FlameBoss-LifX/
+Code, documentation, isses and license info here.
 """
 
 class FlameBossMon:
@@ -32,6 +35,7 @@ class FlameBossMon:
 
         # Make sure our controller is online
         logging.DEBUG("get_device_info: Checking controller status.")
+        logging.DEBUG(f"get_device_info: status is {response["online"]}")
         try:
             response["online"]
         except:
@@ -39,11 +43,16 @@ class FlameBossMon:
         logging.DEBUG("get_device_info: Controller is online.")
 
         # Collect interesting information
-        logging.DEBUG("get_device_info: Setting info")
-        self.cook_id = response["most_recent_cook"]["id"]
-        self.temp_drift = response["config"]["Pit_Alarm_Range_tdc"]
-        logging.DEBUG(f"get_device_info: self.cook_id is {self.cook_id}")
-        logging.DEBUG(f"get_device_info: self.temp_drift is {se;f.temp_drift}")
+        try:
+            logging.DEBUG("get_device_info: Setting info")
+            logging.DEBUG(f"get_device_info: last cook ID is {response["most_recent_cook"]["id"]}")
+            self.cook_id = response["most_recent_cook"]["id"]
+            logging.DEBUG(f"get_device_info: Temp drift is {response["config"]["Pit_Alarm_Range_tdc"]}")
+            self.temp_drift = response["config"]["Pit_Alarm_Range_tdc"]
+        except KeyError as e:
+            logging.CRITICAL("A unexpected response was received from the FlameBoss API and we did not"
+            "receive some critical information.\nSpeficially, the issue was:\n\n{e}\nPlease log this as an issue"
+            "here: https://github.com/CameronEx/FlameBoss-LifX/issues")
 
     def get_cook(self):
         """
