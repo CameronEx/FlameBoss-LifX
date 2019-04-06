@@ -78,7 +78,7 @@ class FBLifX:
         logging.info("Starting Setup.\nDiscovering bulbs...")
         self.lc.discover_bulbs()
         self.lc.select_target()
-        bulb_config = lc.save_config()
+        bulb_config = self.lc.get_config()
         logging.debug(f"Selected bulb MAC: {self.bulb_mac}, IP: {self.bulb_ip}")
 
         # Obtain the controller ID.
