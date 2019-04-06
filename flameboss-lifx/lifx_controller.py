@@ -17,7 +17,7 @@ TODO: Group interaction
 
 class LifxController:
 
-    def __init__(self):
+    def __init__(self, bulb_mac=None, bulb_ip=None):
         logging.debug("Initialising LifxController.")
         self.lan = LifxLAN()
         self.bulbs = None
@@ -26,44 +26,63 @@ class LifxController:
         self.group_labels: list = []
         self.bulb = None
         self.group = None
+        self.bulb_mac = bulb_mac
+        self.bulb_ip = bulb_ip
+
+        # Logger config
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        self.ch = logging.StreamHandler()
+        self.ch.setLevel(logging.DEBUG)
+        self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        self.ch.setFormatter(self.formatter)
+        self.logger.addHandler(self.ch)
+
+        # When loading config, we don't need to discover the bulb
+        if self.bulb_mac and self.bulb_ip:
+            from lifxlan import Light
+            self.bulb = Light(self.bulb_mac, self.bulb_ip)
 
     def discover_bulbs(self):
         """
         Discovers individual bulbs, then groups
         """
-        logging.DEBUG("discover_bulbs: Discovering individual bulbs.")
+        logging.debug("discover_bulbs: Discovering individual bulbs.")
         # Discover bulbs on the LAN
         self.bulbs = self.lan.get_devices()
-        logging.DEBUG(f"discover_bulbs: Discovery complete. {len(self.lan.devices)} bulbs found.")
+        logging.debug(f"discover_bulbs: Discovery complete. {len(self.lan.devices)} bulbs found.")
 
         for bulb in self.bulbs:
             # Build a list of bulb names
-            bulb_name = bulb.get_group_label()
+            bulb_name = bulb.get_label()
             if bulb_name not in self.bulb_labels:
                 self.bulb_labels.append(bulb_name)
             # Figure out what groups exist from their group_labels
             # There is no way to simply discover what groups are available
             group = bulb.get_group_label()
-            if group not in self.group_labels.append(group):
-                self.group_labels.append(group)
+            if group:
+                if group not in self.group_labels:
+                    self.group_labels.append(group)
 
     def select_target(self):
         """
         Creates menu to select target bulb or group.
         """
+
         title = "Would you like to target a single bulb, or groups of bulbs?"
         options = ["Single", "Group"]
 
-        selection, _ = pick(options, title)
-        if selection == "0":
-            logging.DEBUG("User is going to target a single bulb.")
+        _, selection = pick(options, title)
+        print(type(selection), selection)
+        if selection == 0:
+            logging.debug("User is going to target a single bulb.")
             title = "Select the bulb to target"
-            selection, _ = pick(self.bulb_labels, title)
+            _, selection = pick(self.bulb_labels, title)
             self.bulb = self.bulbs[selection]
-        else:
+        elif selection == 1:
             logging.debug("User is going to target a group of bulbs.")
             title = "Select the target group"
-            selection, _ = pick(self.group_labels, title)
+            _, selection = pick(self.group_labels, title)
             self.group = self.groups[selection]
 
     def get_colour(self):
@@ -101,7 +120,7 @@ class LifxController:
                                 }
             return bulb_config
         else:
-            logging.debug("Return group config")
+            logging.debug("get_config: Returning group config")
 
 
 if __name__ == "__main__":
