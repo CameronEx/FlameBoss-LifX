@@ -1,0 +1,2 @@
+lifxlan==1.2.5
+requests==2.21.0
